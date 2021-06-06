@@ -13,3 +13,4 @@ In this project I will model the Sun-Earth system with a satellite of negligible
 * https://gereshes.com/2018/11/12/dynamics-of-the-3-body-problem/
 * https://gereshes.com/2018/10/22/introduction-to-the-3-body-problem/
 * https://towardsdatascience.com/modelling-the-three-body-problem-in-classical-mechanics-using-python-9dc270ad7767
+* https://nssdc.gsfc.nasa.gov/planetary/planetfact.html
