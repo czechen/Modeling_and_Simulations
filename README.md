@@ -5,7 +5,9 @@ In this project I will model the Sun-Earth system with a satellite of negligible
 
 ### Tasks
 
--[] Co-rotating reference frame
+- [ ] Co-rotating reference frame
+- [ ] Better Data-analysis
+- [ ] Proper Readme and comments
 
 ### Sources: 
 * https://gereshes.com
