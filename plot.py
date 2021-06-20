@@ -2,6 +2,8 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import cm
+from matplotlib.ticker import LinearLocator
 import os.path
 
 filename1 = "out1.txt"
@@ -76,6 +78,54 @@ ax2.scatter(ux2,uy2,s=5,c='#2E1A81')
 ax2.scatter(uxp,uyp,s=1,c='black')
 plt.xlabel('x')
 plt.ylabel('y')
+plt.xlim(-1.5,1.5)
+plt.ylim(-1.5,1.5)
 ax2.legend(['center of mass','sun','earth','particle'])
 
 plt.show()
+
+
+filename3 = "out3.txt"
+if not os.path.isfile(filename3):
+    print('File does not exist.')
+else:
+    f3 = open(filename3)
+
+potential3 = [data.strip() for line in f3.readlines() for data in line.split(',') if data.strip()]
+omega = []
+x = []
+y = []
+j = 0
+while(j<len(potential3)):
+    omega.append(float(potential3[j]))
+    x.append(float(potential3[j+1]))
+    y.append(float(potential3[j+2]))
+    j +=3
+
+fig3, ax3 = plt.subplots(subplot_kw={"projection": "3d"})
+
+k = int(np.sqrt(len(x)))
+X = np.reshape(x, (k, k))
+Y = np.reshape(y, (k, k))
+Omega = np.reshape(omega, (k, k))
+
+
+
+surf = ax3.plot_surface(X,Y,Omega,cmap=plt.cm.jet,linewidth=0, antialiased=False)
+plt.show()
+
+fig4,ax4=plt.subplots()
+c = np.linspace(-7, -2, num=50)
+plt.contourf(X,Y,Omega,c,cmap=plt.cm.jet)
+ax4.scatter(rxCM,ryCM,s=10,c='black')
+ax4.scatter(ux1,uy1,s=100,c='#FD2E24')
+ax4.scatter(ux2,uy2,s=5,c='#2E1A81')
+ax4.scatter(uxp,uyp,s=1,c='black')
+ax4.set_box_aspect(1)
+plt.xlim(-1.5,1.5)
+plt.ylim(-1.5,1.5)
+plt.xlabel('x')
+plt.ylabel('y')
+plt.colorbar()
+plt.show()
+

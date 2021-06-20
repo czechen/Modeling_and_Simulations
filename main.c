@@ -22,13 +22,14 @@ void rot_acc(double* ax,double* ay,double vx,double vy,double x,double y,double 
 void vec_diff(double* rx, double* ry, double rx1, double ry1,double rx2,double ry2);
 void rotverl_pos(double* rx,double* ry,double vx,double vy,double ax,double ay, double dt);
 void rotverl_vel(double* vx,double* vy,double ax1,double ay1,double ax2,double ay2, double dt);
+double pseudo_pot(double* omega, double x, double y,double a);
 
 
 int main(void) /* int argc, char *argv[] */
 {
 	/* General Constants and simulation parameters (timestep and number of steps) */
 	const double G = 6.67430 * pow(10,(-11));
-	const double dt1 = (60*60*24);
+	const double dt1 = (60);
 	const double N = 10000;
 
 	/*
@@ -57,12 +58,14 @@ int main(void) /* int argc, char *argv[] */
 
 	/* Data */ 
 	double m_e = 5.9724 * pow(10,24); /* Eath's mass */
+	double m_m = 0.07346 * pow(10,24);
+	double v_m = 970;
+	double r_m = 0.3844 * pow(10,9);
 
 	/* Masses*/
-	double m1 = m_r;
-	double m2 = m_e;
+	double m1 = m_e;
+	double m2 = m_m;
 	double M = m1+m2;
-	double M2 = m2/M;
 	double mp = 100;
 
 
@@ -70,21 +73,21 @@ int main(void) /* int argc, char *argv[] */
 	double rx1_0 = 0;
 	double ry1_0 = 0;
 
-	double rx2_0 = r_r;
+	double rx2_0 = r_m;
 	double ry2_0 = 0;
 
-	double rxp_0 = 0.5*r_r;
-	double ryp_0 = -0.3*r_r;
+	double rxp_0 = 0.5*r_m*((m1-m2)/M);
+	double ryp_0 = 0.5*sqrt(3)*r_m;
 	double rp_norm = sqrt(pow(rxp_0,2)+pow(ryp_0,2));
 
 	double vx1_0 = 0;
 	double vy1_0 = 0;
 
-	double vx2_0 = 1;
-	double vy2_0 = v_r;
+	double vx2_0 = 0;
+	double vy2_0 = v_m;
 
-	double vxp_0 = -v_r*(ryp_0/rp_norm);
-	double vyp_0 = v_r*(rxp_0/rp_norm);
+	double vxp_0 = -v_m*(ryp_0/rp_norm);
+	double vyp_0 = v_m*(rxp_0/rp_norm);
 
 
 	/* Openning the output file */
@@ -144,9 +147,9 @@ int main(void) /* int argc, char *argv[] */
 	double w = 2*M_PI/(T); /* Angluar velocity around the Z-axis */
 	
 	/* Characteristic units */
-	double l_c = r_r; /* characteristic length */
+	double l_c = r_m; /* characteristic length */
 	double t_c = sqrt(l_c/(G*M)); /* characteristic time */
-	double dt_t = dt1/t_c; 
+	double dt2 = t_c; 
 	double a = m2/(M);
 
 
@@ -197,19 +200,36 @@ int main(void) /* int argc, char *argv[] */
     	fprintf(out2,"%f,%f",uxp,uyp);
     	putc('\n', out2);
     	double ax1,ay1,ax2,ay2;
-    	/* particle_force(&Fx1,&Fy1,ux1,uy1,ux2,uy2,uxp,uyp,m1,m2,mp,G);
-    	ax1 = Fx1/mp;
-    	ay1 = Fy1/mp;*/
     	rot_acc(&ax1,&ay1,vrott_xp,vrott_yp,uxp,uyp,rho1,rho2,a);
-    	rot_update_pos(&uxp,&uyp,vrott_xp,vrott_yp,ax1,ay1,300*t_c);
-    	/* particle_force(&Fx2,&Fy2,ux1,uy1,ux2,uy2,uxp,uyp,m1,m2,mp,G);
-    	ax2 = Fx2/mp;
-    	ay2 = Fy2/mp; */
+    	rot_update_pos(&uxp,&uyp,vrott_xp,vrott_yp,ax1,ay1,dt2);
     	rot_acc(&ax2,&ay2,vrott_xp,vrott_yp,uxp,uyp,rho1,rho2,a);
-    	rot_update_vel(&vrott_xp,&vrott_yp,ax1,ay1,ax2,ay2,300*t_c);
+    	rot_update_vel(&vrott_xp,&vrott_yp,ax1,ay1,ax2,ay2,dt2);
 
     }
     fclose(out2);
+
+    FILE *out3; 
+	out3 = fopen("out3.txt", "w");
+	{
+        if (out3 == NULL)
+        {
+            printf("Unable to create a file\n");
+            fclose(out3);
+            return 1;
+        }
+    }
+    double x,y,omega;
+    double h=0.06;
+    for(x = -2;x < 2.1;x=x+h)
+    {
+    	for(y = -2;y < 2.1;y=y+h)
+    	{
+    		pseudo_pot(&omega,x,y,a);
+    		fprintf(out3,"%f,%f,%f",-2*omega,x,y);
+    		putc('\n', out3);
+    	}
+    }
+    fclose(out3);
 
    	return(0);
 
@@ -304,9 +324,18 @@ void rot_acc(double* ax,double* ay,double vx,double vy,double x,double y,double 
 {
 	assert(ax);
 	assert(ay);
-	*ax = x+vy - (1-a)*(x+a)/(pow(rho1,3)) - a*(x-a)/(pow(rho2,3));
+	*ax = x+vy - (1-a)*(x+a)/(pow(rho1,3)) - a*(x+a-1)/(pow(rho2,3));
 	*ay = y-vx - (1-a)*(y)/(pow(rho1,3)) - a*(y)/(pow(rho2,3));
 }
+
+double pseudo_pot(double* omega, double x, double y,double a)
+{
+	assert(omega);
+	double d = sqrt(pow((x+a),2)+pow(y,2));
+	double r = sqrt(pow((x+a-1),2)+pow(y,2));
+	*omega = 0.5*(pow(x,2)+pow(y,2))+ (1-a)/d + a/r;
+}
+
 
 void rotverl_pos(double* rx,double* ry,double vx,double vy,double ax,double ay, double dt)
 {
