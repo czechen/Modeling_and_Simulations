@@ -29,7 +29,7 @@ int main(void) /* int argc, char *argv[] */
 {
 	/* General Constants and simulation parameters (timestep and number of steps) */
 	const double G = 6.67430 * pow(10,(-11));
-	const double dt1 = (60);
+	const double dt1 = (60*60*12);
 	const double N = 10000;
 
 	/*
@@ -63,31 +63,31 @@ int main(void) /* int argc, char *argv[] */
 	double r_m = 0.3844 * pow(10,9);
 
 	/* Masses*/
-	double m1 = m_e;
-	double m2 = m_m;
+	double m1 = m_r;
+	double m2 = m_e;
 	double M = m1+m2;
-	double mp = 100;
+	double mp = 100000;
 
 
 	/* Initial position and velocities */
 	double rx1_0 = 0;
 	double ry1_0 = 0;
 
-	double rx2_0 = r_m;
+	double rx2_0 = r_r;
 	double ry2_0 = 0;
 
-	double rxp_0 = 0.5*r_m*((m1-m2)/M);
-	double ryp_0 = 0.5*sqrt(3)*r_m;
+	double rxp_0 = 0.5*r_r*((m1-m2)/M);
+	double ryp_0 = 0.5*sqrt(3)*r_r;
 	double rp_norm = sqrt(pow(rxp_0,2)+pow(ryp_0,2));
 
 	double vx1_0 = 0;
 	double vy1_0 = 0;
 
 	double vx2_0 = 0;
-	double vy2_0 = v_m;
+	double vy2_0 = v_r;
 
-	double vxp_0 = -v_m*(ryp_0/rp_norm);
-	double vyp_0 = v_m*(rxp_0/rp_norm);
+	double vxp_0 = -v_r*(ryp_0/rp_norm);
+	double vyp_0 = v_r*(rxp_0/rp_norm);
 
 
 	/* Openning the output file */
@@ -147,9 +147,9 @@ int main(void) /* int argc, char *argv[] */
 	double w = 2*M_PI/(T); /* Angluar velocity around the Z-axis */
 	
 	/* Characteristic units */
-	double l_c = r_m; /* characteristic length */
+	double l_c = r_r; /* characteristic length */
 	double t_c = sqrt(l_c/(G*M)); /* characteristic time */
-	double dt2 = t_c; 
+	double dt2 = 500*t_c; 
 	double a = m2/(M);
 
 
