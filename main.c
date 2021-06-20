@@ -16,12 +16,12 @@ void calculate_force(double* fx,double* fy,double rx1,double ry1,double rx2,doub
 void particle_force(double* fx,double* fy,double rx1,double ry1,double rx2,double ry2,double rxp,double ryp,double m1,double m2,double mp,double G);
 void verl_pos(double* rx,double* ry,double vx,double vy,double fx,double fy,double m, int dt);
 void verl_vel(double* vx,double* vy,double fx1,double fy1,double fx2,double fy2,double m, int dt);
-void rot_update_pos(double* rx,double* ry,double vx,double vy,double ax,double ay,int dt);
-void rot_update_vel(double* vx,double* vy,double ax1,double ay1,double ax2,double ay2,int dt);
-void rot_acc(double* ax,double* ay,double vx,double vy,double x,double y,double u1,double u2,double rho1,double rho2,double w);
+void rot_update_pos(double* rx,double* ry,double vx,double vy,double ax,double ay,double dt);
+void rot_update_vel(double* vx,double* vy,double ax1,double ay1,double ax2,double ay2,double dt);
+void rot_acc(double* ax,double* ay,double vx,double vy,double x,double y,double rho1,double rho2,double a);
 void vec_diff(double* rx, double* ry, double rx1, double ry1,double rx2,double ry2);
-void rotverl_pos(double* rx,double* ry,double vx,double vy,double ax,double ay, int dt);
-void rotverl_vel(double* vx,double* vy,double ax1,double ay1,double ax2,double ay2, int dt);
+void rotverl_pos(double* rx,double* ry,double vx,double vy,double ax,double ay, double dt);
+void rotverl_vel(double* vx,double* vy,double ax1,double ay1,double ax2,double ay2, double dt);
 
 
 int main(void) /* int argc, char *argv[] */
@@ -29,7 +29,7 @@ int main(void) /* int argc, char *argv[] */
 	/* General Constants and simulation parameters (timestep and number of steps) */
 	const double G = 6.67430 * pow(10,(-11));
 	const double dt1 = (60*60*24);
-	const double N = 365;
+	const double N = 10000;
 
 	/*
 	if (argc < 2)
@@ -52,7 +52,7 @@ int main(void) /* int argc, char *argv[] */
     /* Reference Quantities */
 	double m_r = 1.988500 * pow(10,30); /* Solar mass [kg] */
 	double r_r = 149597870000; /* Astronomic Unit [m] */
-	double t_r = (60*24); /* half a day */
+	double t_r = (60*60*24); /* a day */
 	double v_r = 29780; /* avg. velocity of earth */
 
 	/* Data */ 
@@ -61,7 +61,9 @@ int main(void) /* int argc, char *argv[] */
 	/* Masses*/
 	double m1 = m_r;
 	double m2 = m_e;
-	double mp = 100000;
+	double M = m1+m2;
+	double M2 = m2/M;
+	double mp = 100;
 
 
 	/* Initial position and velocities */
@@ -71,8 +73,8 @@ int main(void) /* int argc, char *argv[] */
 	double rx2_0 = r_r;
 	double ry2_0 = 0;
 
-	double rxp_0 = 0.5*r_r*((m_r-m_e)/(m_r+m_e));
-	double ryp_0 = 0.5*sqrt(3)*r_r;
+	double rxp_0 = 0.5*r_r;
+	double ryp_0 = -0.3*r_r;
 	double rp_norm = sqrt(pow(rxp_0,2)+pow(ryp_0,2));
 
 	double vx1_0 = 0;
@@ -140,7 +142,6 @@ int main(void) /* int argc, char *argv[] */
     /* Data */
     double T = (60*60*24*365.25); /* Orbital period */
 	double w = 2*M_PI/(T); /* Angluar velocity around the Z-axis */
-	double M = m1+m2;
 	
 	/* Characteristic units */
 	double l_c = r_r; /* characteristic length */
@@ -154,23 +155,25 @@ int main(void) /* int argc, char *argv[] */
 	double ryCM = (ry1_0*m1 + ry2_0*m2)/M;
 
 	/* Distanes from the center of mass to massive bodies */
-	double ux1 = rx1_0-rxCM; 
-	double uy1 = ry1_0-ryCM;
-	double ux2 = rx2_0-rxCM;
-	double uy2 = ry2_0-ryCM;
-	double uxp = rxp_0-rxCM;
-	double uyp = ryp_0-ryCM;
-
+	double ux1 = (rx1_0-rxCM)/l_c; 
+	double uy1 = (ry1_0-ryCM)/l_c;
+	double ux2 = (rx2_0-rxCM)/l_c;
+	double uy2 = (ry2_0-ryCM)/l_c;
+	double uxp = (rxp_0-rxCM)/l_c;
+	double uyp = (ryp_0-ryCM)/l_c;
+	
 	/* Distance from the bodies to the particle and velocities of the particle */
-	double rhox1 = (ux1+uxp);
-	double rhoy1 = (uy1+uyp);
-	double rhox2 = (ux2+uxp);
-	double rhoy2 = (uy2+uyp);
-	double rho1 = sqrt(pow(rhox1,2)+pow(rhoy1,2));
-	double rho2 = sqrt(pow(rhox2,2)+pow(rhoy2,2));
+	double rhox1 = (ux1-uxp);
+	double rhoy1 = (uy1-uyp);
+	double rhox2 = (ux2-uxp);
+	double rhoy2 = (uy2-uyp);
+	double rho1 = (sqrt(pow(rhox1,2)+pow(rhoy1,2)));
+	double rho2 = (sqrt(pow(rhox2,2)+pow(rhoy2,2)));
+	double up  = (sqrt(pow(uxp,2)+pow(uyp,2)));
 
 	double vrott_xp = 0;
 	double vrott_yp = 0;
+	
 
 
     FILE *out2; 
@@ -194,10 +197,16 @@ int main(void) /* int argc, char *argv[] */
     	fprintf(out2,"%f,%f",uxp,uyp);
     	putc('\n', out2);
     	double ax1,ay1,ax2,ay2;
-    	rot_acc(&ax1,&ay2,vrott_xp,vrott_yp,uxp,uyp,ux1,ux2,rho1,rho2,w);
-    	rot_update_pos(&uxp,&uyp,vrott_xp,vrott_yp,ax1,ax2,dt1);
-    	rot_acc(&ax2,&ay2,vrott_xp,vrott_yp,uxp,uyp,ux1,ux2,rho1,rho2,w);
-    	rot_update_vel(&vrott_xp,&vrott_yp,ax1,ay1,ax2,ay2,dt1);
+    	/* particle_force(&Fx1,&Fy1,ux1,uy1,ux2,uy2,uxp,uyp,m1,m2,mp,G);
+    	ax1 = Fx1/mp;
+    	ay1 = Fy1/mp;*/
+    	rot_acc(&ax1,&ay1,vrott_xp,vrott_yp,uxp,uyp,rho1,rho2,a);
+    	rot_update_pos(&uxp,&uyp,vrott_xp,vrott_yp,ax1,ay1,300*t_c);
+    	/* particle_force(&Fx2,&Fy2,ux1,uy1,ux2,uy2,uxp,uyp,m1,m2,mp,G);
+    	ax2 = Fx2/mp;
+    	ay2 = Fy2/mp; */
+    	rot_acc(&ax2,&ay2,vrott_xp,vrott_yp,uxp,uyp,rho1,rho2,a);
+    	rot_update_vel(&vrott_xp,&vrott_yp,ax1,ay1,ax2,ay2,300*t_c);
 
     }
     fclose(out2);
@@ -272,7 +281,7 @@ void verl_vel(double* vx,double* vy,double fx1,double fy1,double fx2,double fy2,
 	*vy = *vy + ((fy1+fy2)*dt)/(2*m);
 }
 
-void rot_update_pos(double* rx,double* ry,double vx,double vy,double ax,double ay,int dt)
+void rot_update_pos(double* rx,double* ry,double vx,double vy,double ax,double ay,double dt)
 {
 	double rx_new = *rx;
 	double ry_new = *ry;
@@ -281,7 +290,7 @@ void rot_update_pos(double* rx,double* ry,double vx,double vy,double ax,double a
 	* ry = ry_new;
 }
 
-void rot_update_vel(double* vx,double* vy,double ax1,double ay1,double ax2,double ay2,int dt)
+void rot_update_vel(double* vx,double* vy,double ax1,double ay1,double ax2,double ay2,double dt)
 {
 	double vx_new = *vx;
 	double vy_new = *vy;
@@ -291,15 +300,15 @@ void rot_update_vel(double* vx,double* vy,double ax1,double ay1,double ax2,doubl
 
 }
 
-void rot_acc(double* ax,double* ay,double vx,double vy,double x,double y,double u1,double u2,double rho1,double rho2,double w)
+void rot_acc(double* ax,double* ay,double vx,double vy,double x,double y,double rho1,double rho2,double a)
 {
 	assert(ax);
 	assert(ay);
-	*ax = -u2*(x+u1)/(pow(rho1,3)) - u1*(x-u2)/(pow(rho2,3))+x*pow(w,2)+2*w*vy;
-	*ax = -u2*(y)/(pow(rho1,3)) - u1*(y)/(pow(rho2,3))+y*pow(w,2)-2*w*vx;
+	*ax = x+vy - (1-a)*(x+a)/(pow(rho1,3)) - a*(x-a)/(pow(rho2,3));
+	*ay = y-vx - (1-a)*(y)/(pow(rho1,3)) - a*(y)/(pow(rho2,3));
 }
 
-void rotverl_pos(double* rx,double* ry,double vx,double vy,double ax,double ay, int dt)
+void rotverl_pos(double* rx,double* ry,double vx,double vy,double ax,double ay, double dt)
 {
 	assert(rx);
 	assert(ry);
@@ -307,7 +316,7 @@ void rotverl_pos(double* rx,double* ry,double vx,double vy,double ax,double ay, 
 	*ry = (*ry) + vy*dt + (ay*pow(dt,2))/(2);
 }
 
-void rotverl_vel(double* vx,double* vy,double ax1,double ay1,double ax2,double ay2, int dt)
+void rotverl_vel(double* vx,double* vy,double ax1,double ay1,double ax2,double ay2, double dt)
 {
 	assert(vx);
 	assert(vy);
