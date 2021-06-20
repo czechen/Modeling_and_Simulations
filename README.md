@@ -1,7 +1,7 @@
 # Modeling_and_Simulations
 
 ## Lagrange Points
-In this project I will model the Sun-Earth system with a satellite of negligible mass. The main focus will be on numerical integration of the equations of motion and on the location of the Lagrange Points.  
+Model of the Sun-Earth system with a satellite of negligible mass.  
 
 
 ![What is this](Figure_1.png)
