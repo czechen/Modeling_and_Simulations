@@ -6,6 +6,7 @@ from matplotlib import cm
 from matplotlib.ticker import LinearLocator
 import os.path
 
+# Reading the first output file
 filename1 = "out1.txt"
 if not os.path.isfile(filename1):
     print('File does not exist.')
@@ -13,7 +14,7 @@ else:
     f1 = open(filename1)
         
 
-
+# Putting all the lines in a vector
 positions1 = [data.strip() for line in f1.readlines() for data in line.split(',') if data.strip()]
 rx1 = []
 ry1 = []
@@ -22,6 +23,7 @@ ry2 = []
 rxp = []
 ryp = []
 i = 0
+# Reading all the values from the postion vector
 while (i < len(positions1)):
     rx1.append(float(positions1[i]))
     ry1.append(float(positions1[i+1]))
@@ -30,7 +32,7 @@ while (i < len(positions1)):
     rxp.append(float(positions1[i+4]))
     ryp.append(float(positions1[i+5]))
     i += 6
-
+# Plot
 fig1, ax1 = plt.subplots()
 ax1.set_box_aspect(1)
 ax1.scatter(rx1,ry1,s=100,c='#FD2E24')
@@ -42,6 +44,7 @@ ax1.legend(['sun','earth','particle'])
 
 plt.show()
 
+# For the second and the third output file it is the same process
 
 filename2 = "out2.txt"
 if not os.path.isfile(filename2):
@@ -52,11 +55,11 @@ else:
 
 
 positions2 = [data.strip() for line in f2.readlines() for data in line.split(',') if data.strip()]
+
 rxCM =0
 ryCM =0
 uxp = []
 uyp = []
-#print(positions2)
 i = 0
 while (i < len(positions2)):
     if i == 0:
@@ -110,10 +113,11 @@ Y = np.reshape(y, (k, k))
 Omega = np.reshape(omega, (k, k))
 
 
-
+#3D plot of the potential
 surf = ax3.plot_surface(X,Y,Omega,cmap=plt.cm.jet,linewidth=0, antialiased=False)
 plt.show()
 
+#Contour plot of the potential
 fig4,ax4=plt.subplots()
 c = np.linspace(-7, -2, num=50)
 plt.contourf(X,Y,Omega,c,cmap=plt.cm.jet)

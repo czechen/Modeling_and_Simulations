@@ -9,7 +9,7 @@
 #    define M_PI 3.14159265358979323846
 #endif
 
-
+/* Functions */
 void update_pos(double *rx,double *ry,double vx,double vy,double fx,double fy,double m,int dt);
 void update_vel(double* vx,double* vy,double fx1,double fy1,double fx2,double fy2,double m,int dt);
 void calculate_force(double* fx,double* fy,double rx1,double ry1,double rx2,double ry2,double m1,double m2,double G);
@@ -25,14 +25,17 @@ void rotverl_vel(double* vx,double* vy,double ax1,double ay1,double ax2,double a
 double pseudo_pot(double* omega, double x, double y,double a);
 
 
-int main(void) /* int argc, char *argv[] */
+int main(void)
 {
 	/* General Constants and simulation parameters (timestep and number of steps) */
 	const double G = 6.67430 * pow(10,(-11));
-	const double dt1 = (60*60*12);
-	const double N = 10000;
+	const double dt1 = (60*60*12); /* Time step */
+	const double N = 10000;	/* Number of iterations */
 
-	/*
+	/* This is for future implementation of congif file
+	
+	int argc, char *argv[]
+
 	if (argc < 2)
     {
         printf("Usage: ./main config_file\n");
@@ -54,19 +57,19 @@ int main(void) /* int argc, char *argv[] */
 	double m_r = 1.988500 * pow(10,30); /* Solar mass [kg] */
 	double r_r = 149597870000; /* Astronomic Unit [m] */
 	double t_r = (60*60*24); /* a day */
-	double v_r = 29780; /* avg. velocity of earth */
+	double v_r = 29780; /* Avg. velocity of earth */
 
 	/* Data */ 
 	double m_e = 5.9724 * pow(10,24); /* Eath's mass */
-	double m_m = 0.07346 * pow(10,24);
-	double v_m = 970;
-	double r_m = 0.3844 * pow(10,9);
+	double m_m = 0.07346 * pow(10,24); /* Moon's mass */
+	double v_m = 970;	/* Moon's orbital velocity */
+	double r_m = 0.3844 * pow(10,9);	/* Moon's semimajor axis */
 
 	/* Masses*/
 	double m1 = m_r;
 	double m2 = m_e;
 	double M = m1+m2;
-	double mp = 100000;
+	double mp = 100000; /* This is the mass of the third object (reffered to as particle)  */
 
 
 	/* Initial position and velocities */
@@ -76,7 +79,7 @@ int main(void) /* int argc, char *argv[] */
 	double rx2_0 = r_r;
 	double ry2_0 = 0;
 
-	double rxp_0 = 0.5*r_r*((m1-m2)/M);
+	double rxp_0 = 0.5*r_r*((m1-m2)/M); /* This initial position puts the particle at L4 */
 	double ryp_0 = 0.5*sqrt(3)*r_r;
 	double rp_norm = sqrt(pow(rxp_0,2)+pow(ryp_0,2));
 
@@ -86,7 +89,7 @@ int main(void) /* int argc, char *argv[] */
 	double vx2_0 = 0;
 	double vy2_0 = v_r;
 
-	double vxp_0 = -v_r*(ryp_0/rp_norm);
+	double vxp_0 = -v_r*(ryp_0/rp_norm); 
 	double vyp_0 = v_r*(rxp_0/rp_norm);
 
 
@@ -119,6 +122,9 @@ int main(void) /* int argc, char *argv[] */
     double vyp = vyp_0;
 
     int i = 0;
+    
+    /* Integration of EOM using the velocity verlet method */
+
     while(i<N)
     {
     	i++;
@@ -149,7 +155,7 @@ int main(void) /* int argc, char *argv[] */
 	/* Characteristic units */
 	double l_c = r_r; /* characteristic length */
 	double t_c = sqrt(l_c/(G*M)); /* characteristic time */
-	double dt2 = 500*t_c; 
+	double dt2 = 500*t_c; /* Time-step expressed as a multiple of characteristic time */
 	double a = m2/(M);
 
 
@@ -158,6 +164,7 @@ int main(void) /* int argc, char *argv[] */
 	double ryCM = (ry1_0*m1 + ry2_0*m2)/M;
 
 	/* Distanes from the center of mass to massive bodies */
+	/* All of these are non-dimensionalized using charact. length*/
 	double ux1 = (rx1_0-rxCM)/l_c; 
 	double uy1 = (ry1_0-ryCM)/l_c;
 	double ux2 = (rx2_0-rxCM)/l_c;
@@ -174,6 +181,7 @@ int main(void) /* int argc, char *argv[] */
 	double rho2 = (sqrt(pow(rhox2,2)+pow(rhoy2,2)));
 	double up  = (sqrt(pow(uxp,2)+pow(uyp,2)));
 
+	/* Particle's initial velocity  */
 	double vrott_xp = 0;
 	double vrott_yp = 0;
 	
@@ -218,6 +226,8 @@ int main(void) /* int argc, char *argv[] */
             return 1;
         }
     }
+
+    /* Calculation of the pseudo-potential in rottating reference frame */
     double x,y,omega;
     double h=0.06;
     for(x = -2;x < 2.1;x=x+h)
@@ -319,7 +329,7 @@ void rot_update_vel(double* vx,double* vy,double ax1,double ay1,double ax2,doubl
 	*vy = vy_new;
 
 }
-
+/* EOM in rottating reference frame. Can also be expressed as a derivative of the pseudo potential */
 void rot_acc(double* ax,double* ay,double vx,double vy,double x,double y,double rho1,double rho2,double a)
 {
 	assert(ax);
@@ -336,7 +346,7 @@ double pseudo_pot(double* omega, double x, double y,double a)
 	*omega = 0.5*(pow(x,2)+pow(y,2))+ (1-a)/d + a/r;
 }
 
-
+/* Velocity verelet in rottating reference frame */
 void rotverl_pos(double* rx,double* ry,double vx,double vy,double ax,double ay, double dt)
 {
 	assert(rx);
