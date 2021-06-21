@@ -16,6 +16,7 @@ Python draws four figures. First and the second are positions in both reference 
 - [x] Co-rotating reference frame
 - [x] Pseudo Potential
 - [ ] Better Data-analysis
+- [ ] Add higher order integrator
 - [x] Proper Readme and comments
 
 ### Sources: 
